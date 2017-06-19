@@ -293,6 +293,22 @@ public class LibraryUtils {
          0: ldc           #3                  // int 32768
          2: ireturn</code></pre></div></div>
 <div class="ulist"><ul><li><p>reference to <code>Dfp</code> is gone!</p></li><li><p>compiler <em>inlines</em> some constants</p></li><li><p>JLS says compiler doesn&#8217;t have to add the dependent class to constant pool</p></li></ul></div></section><section id="what-gradle-does"><h2>What Gradle does</h2><div class="ulist"><ul><li class="fragment"><p>Analyze all <em>bytecode</em> of all classes</p></li><li class="fragment"><p>Record which constants are used in which file</p></li><li class="fragment"><p>Whenever a producer changes, check if a <em>constant</em> changed</p></li><li class="fragment"><p>If yes, recompile <em>everything</em></p></li></ul></div></section></section>
+<section id="annotation-processors"><h2>Annotation processors</h2><div class="ulist"><ul><li class="fragment"><p>Implementation of the annotation processors matter at compile time</p></li><li class="fragment"><p>Don&#8217;t add annotation processors to <em>compile classpath</em></p></li><li class="fragment"><p>or we cannot use smart classpath snapshotting</p></li></ul></div></section>
+<section id="annotation-processors-2"><h2>Annotation processors</h2><div class="paragraph"><p>Use <code>annotationProcessorPath</code>:</p></div>
+<div class="listingblock"><div class="content"><pre class="highlight"><code class="groovy language-groovy">configurations {
+    apt
+}
+dependencies {
+    // The dagger compiler and its transitive dependencies will only be found on annotation processing classpath
+    apt 'com.google.dagger:dagger-compiler:2.8'
+
+    // And we still need the Dagger annotations on the compile classpath itself
+    compileOnly 'com.google.dagger:dagger:2.8'
+}
+
+compileJava {
+    options.annotationProcessorPath = configurations.apt
+}</code></pre></div></div></section>
 <section><section id="variant-aware-dependency-management"><h2>Variant aware dependency management</h2></section><section id="producer-vs-consumer"><h2>Producer vs consumer</h2><div class="ulist"><ul><li class="fragment"><p>A <code>consumer</code> <em>depends on</em> a <code>producer</code></p></li><li class="fragment"><p>There are multiple requirements</p><div class="ulist"><ul><li><p>What is required to compile against a <code>producer</code>?</p></li><li><p>What is required at <em>runtime</em> for a specific configuration?</p></li><li><p>What artifacts does the producer offer?</p></li><li><p>Is the <code>producer</code> a sub-project or an external component?</p></li></ul></div></li></ul></div></section><section id="what-do-you-need-to-compile-against-a-component"><h2>What do you need to compile against a component?</h2><div class="ulist"><ul><li><p>Class files</p></li><li><p>Can be found in different forms:</p><div class="ulist"><ul><li><p>class directories</p></li><li><p>jars</p></li><li><p>aars, &#8230;&#8203;</p></li></ul></div></li></ul></div>
 <div class="paragraph"><p><strong>Question</strong>: do we need to build a jar of the producer if all we want is to compile against it?</p></div></section><section id="discriminate-thanks-to-em-usage-em"><h2>Discriminate thanks to <em>usage</em></h2><div class="quoteblock"><blockquote><div class="paragraph"><p>Give me something that I can use to compile</p></div></blockquote><div class="attribution">&#8212; Consumer</div></div></section><section id="discriminate-thanks-to-em-usage-em-2"><h2>Discriminate thanks to <em>usage</em></h2><div class="quoteblock"><blockquote><div class="paragraph"><p>Sure, here&#8217;s a jar</p></div></blockquote><div class="attribution">&#8212; Producer</div></div></section><section id="discriminate-thanks-to-em-usage-em-3"><h2>Discriminate thanks to <em>usage</em></h2><div class="paragraph"><p>But we can be finer:</p></div>
 <div class="quoteblock"><blockquote><div class="paragraph"><p>Sure, here&#8217;s a class directory</p></div></blockquote><div class="attribution">&#8212; Producer</div></div></section><section id="discriminate-thanks-to-em-usage-em-4"><h2>Discriminate thanks to <em>usage</em></h2><div class="paragraph"><p>Or smarter:</p></div>
