@@ -101,7 +101,7 @@ addDependencyGraph(1, function(cy) {
 });
 </script></section><section id="cascading-recompilation-2"><h2>Cascading recompilation</h2><div class="paragraph"><p>But also with side effects:</p></div>
 <div class="ulist"><ul><li><p>compile dependencies <em>leak</em> to the downstream consumers</p></li><li><p>hard to upgrade dependencies without breaking clients</p></li></ul></div></section></section>
-<section><section id="separating-api-and-implementation" data-state="show-dep-graph2"><h2>Separating API and implementation</h2></section><section id="example"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code class="java language-java">import com.acme.model.Person;
+<section><section id="separating-api-and-implementation" data-background-color="#01303a"><h2>Separating API and implementation</h2></section><section id="example"><h2>Example</h2><div class="listingblock"><div class="content"><pre class="highlight"><code class="java language-java">import com.acme.model.Person;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -131,7 +131,7 @@ apply plugin: 'java-library'
 dependencies {
    api project(':model')
    implementation 'com.google.guava:guava:18.0'
-}</code></pre></div></div></section><section id="consequences-on-cascading" data-state="show-dep-graph2"><h2>Consequences on cascading</h2><div id="cy2" class="drawing"></div>
+}</code></pre></div></div></section><section id="api-vs-impl-graph" data-state="show-dep-graph2"><h2>API vs impl graph</h2><div id="cy2" class="drawing"></div>
 
 <script>
 addDependencyGraph(2, function(cy) {
@@ -204,7 +204,7 @@ addDependencyGraph(4, function(cy) {
    highlightNextEle(cy.$('#h'));
 });
 </script></section></section>
-<section><section id="consumers-are-not-equal" data-background-color="#01303a"><h2>Consumers are not equal</h2></section><section id="classpath-snapshotting"><h2>Classpath snapshotting</h2><div class="ulist"><ul><li class="fragment"><p>Compute a hash of inputs</p></li><li class="fragment"><p>If hash hasn&#8217;t changed, task is up-to-date</p></li><li class="fragment"><p>Is a compile classpath equivalent to runtime classpath?</p></li></ul></div></section><section id="compile-classpath"><h2>Compile classpath</h2><div class="paragraph"><p>What does a <strong>compiler</strong> care about?</p></div>
+<section><section id="consumers-are-not-equal" data-background-color="#01303a"><h2>Consumers are not equal</h2></section><section id="compile-classpath"><h2>Compile classpath</h2><div class="paragraph"><p>What does a <strong>compiler</strong> care about?</p></div>
 <div class="ulist"><ul><li class="fragment"><p>Input: jars, or class directories</p></li><li class="fragment"><p>Jar: class files</p></li><li class="fragment"><p>Class file: both API and implementation</p></li></ul></div></section><section id="compile-classpath-2"><h2>Compile classpath</h2><div class="paragraph"><p>What we provide to the compiler</p></div>
 <div class="listingblock"><div class="content"><pre class="highlight"><code>public class Foo {
     private int x = 123;
@@ -220,7 +220,7 @@ addDependencyGraph(4, function(cy) {
     public int getSquaredX()
     public int getX()
 }</code></pre></div></div>
-<div class="paragraph"><p><strong>only public signatures matter</strong></p></div></section><section id="compile-classpath-5"><h2>Compile classpath</h2><div class="ulist"><ul><li class="fragment"><p>Compute a hash of the signature of class : <code>aedb00fd</code></p></li><li class="fragment"><p>Combine hashes of all classes : <code>e45bdc17</code></p></li><li class="fragment"><p>Combine hashes of all input on classpath: <code>4500fc1</code></p></li><li class="fragment"><p>Result: hash of the compile classpath</p></li><li class="fragment"><p>Only consists of what is <em>relevant</em> to the <code>javac</code> compiler</p></li></ul></div></section><section id="runtime-classpath"><h2>Runtime classpath</h2><div class="paragraph"><p>What does the runtime care about?</p></div></section><section id="runtime-classpath-2"><h2>Runtime classpath</h2><div class="paragraph"><p>What does the runtime care about:</p></div>
+<div class="paragraph"><p><strong>only public signatures matter</strong></p></div></section><section id="compile-classpath-snapshotting"><h2>Compile classpath snapshotting</h2><div class="ulist"><ul><li class="fragment"><p>Compute a hash of the signature of class : <code>aedb00fd</code></p></li><li class="fragment"><p>Combine hashes of all classes : <code>e45bdc17</code></p></li><li class="fragment"><p>Combine hashes of all input on classpath: <code>4500fc1</code></p></li><li class="fragment"><p>Result: hash of the compile classpath</p></li><li class="fragment"><p>Only consists of what is <em>relevant</em> to the <code>javac</code> compiler</p></li></ul></div></section><section id="runtime-classpath"><h2>Runtime classpath</h2><div class="paragraph"><p>What does the runtime care about?</p></div></section><section id="runtime-classpath-2"><h2>Runtime classpath</h2><div class="paragraph"><p>What does the runtime care about:</p></div>
 <div class="listingblock"><div class="content"><pre class="highlight"><code>public class Foo {
     private int x = 123;
 
@@ -234,7 +234,7 @@ FileCollection getCompileClasspath() { ... }
 
 @InputFiles
 @Classpath
-FileCollection getRuntimeClasspath() { ... }</code></pre></div></div></section><section id="compile-avoidance-2"><h2>Compile avoidance</h2><div class="ulist"><ul><li><p>Gradle makes the difference</p></li><li><p>Ignores irrelevant (non ABI) changes to compile classpath</p></li></ul></div></section><section id="effect-on-recompilations" data-state="show-dep-graph5"><h2>Effect on recompilations</h2><div id="cy5" class="drawing"></div>
+FileCollection getRuntimeClasspath() { ... }</code></pre></div></div></section><section id="compile-avoidance-2"><h2>Compile avoidance</h2><div class="ulist"><ul><li><p><em>compile</em> and <em>runtime</em> classpath have different <em>semantics</em></p></li><li><p>Gradle makes the difference</p></li><li><p>Ignores irrelevant (non ABI) changes to compile classpath</p></li></ul></div></section><section id="effect-on-recompilations" data-state="show-dep-graph5"><h2>Effect on recompilations</h2><div id="cy5" class="drawing"></div>
 
 <script>
 addDependencyGraph(5, function(cy) {
@@ -297,7 +297,7 @@ public class LibraryUtils {
          0: ldc           #3                  // int 32768
          2: ireturn</code></pre></div></div>
 <div class="ulist"><ul><li><p>reference to <code>Dfp</code> is gone!</p></li><li><p>compiler <em>inlines</em> some constants</p></li><li><p>JLS says compiler doesn&#8217;t have to add the dependent class to constant pool</p></li></ul></div></section><section id="what-gradle-does"><h2>What Gradle does</h2><div class="ulist"><ul><li class="fragment"><p>Analyze all <em>bytecode</em> of all classes</p></li><li class="fragment"><p>Record which constants are used in which file</p></li><li class="fragment"><p>Whenever a producer changes, check if a <em>constant</em> changed</p></li><li class="fragment"><p>If yes, recompile <em>everything</em></p></li></ul></div></section></section>
-<section id="annotation-processors"><h2>Annotation processors</h2><div class="ulist"><ul><li class="fragment"><p>Implementation of the annotation processors matter at compile time</p></li><li class="fragment"><p>Don&#8217;t add annotation processors to <em>compile classpath</em></p></li><li class="fragment"><p>or we cannot use smart classpath snapshotting</p></li></ul></div></section>
+<section id="annotation-processors"><h2>Annotation processors</h2><div class="ulist"><ul><li class="fragment"><p>Disable incremental compilation (working on it!)</p></li><li class="fragment"><p>Implementation of the annotation processors matter at compile time</p></li><li class="fragment"><p>Don&#8217;t add annotation processors to <em>compile classpath</em></p></li><li class="fragment"><p>or we cannot use smart classpath snapshotting</p></li></ul></div></section>
 <section id="annotation-processors-2"><h2>Annotation processors</h2><div class="paragraph"><p>Use <code>annotationProcessorPath</code>:</p></div>
 <div class="listingblock"><div class="content"><pre class="highlight"><code class="groovy language-groovy">configurations {
     apt
