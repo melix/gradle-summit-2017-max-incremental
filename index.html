@@ -33,8 +33,11 @@
         extraDescription '''Groovy in Action 2 co-author
 Misc OSS contribs (Gradle plugins, deck2pdf, jlangdetect, ...)'''
 }</code></pre></div></div></section>
-<section id="agenda"><h2>Agenda</h2><div class="ulist"><ul><li><p>Incremental builds</p></li><li><p>Compile avoidance</p></li><li><p>Incremental compilation</p></li></ul></div></section>
-<section><section id="incremental-builds"><h2>Incremental builds</h2><div class="ulist"><ul><li><p>Gradle is meant for incremental builds</p></li><li><p><code>clean</code> is a waste of time</p></li><li><p>So declare your inputs/outputs!</p></li></ul></div></section><section id="example-building-a-shaded-jar"><h2>Example: building a shaded jar</h2><div class="listingblock"><div class="content"><pre class="highlight"><code class="groovy language-groovy">task shadedJar(type: ShadedJar) {
+<section id="agenda"><h2>Agenda</h2><div class="ulist"><ul><li><p>Incremental builds</p></li><li><p>Compile avoidance</p></li><li><p>Incremental compilation</p></li><li><p>Variant-aware dependency management</p></li></ul></div></section>
+<section id="incremental-builds" data-background-color="#01303a"><h2>Incremental builds</h2></section>
+<section id="why-does-it-matter"><h2>Why does it matter?</h2><div class="ulist"><ul><li><p>Gradle is meant for incremental builds</p></li><li><p><code>clean</code> is a waste of time</p></li><li><p>Time is $$$</p></li><li><p>So declare your inputs/outputs!</p></li></ul></div></section>
+<section id="the-incremental-test"><h2>The incremental test</h2><div class="ulist"><ul><li class="fragment"><p>Run a build</p></li><li class="fragment"><p>Run again with no change</p></li><li class="fragment"><p>If a task was re-executed, you got it wrong</p></li></ul></div></section>
+<section><section id="fixing-tasks"><h2>Fixing tasks</h2></section><section id="example-building-a-shaded-jar"><h2>Example: building a shaded jar</h2><div class="listingblock"><div class="content"><pre class="highlight"><code class="groovy language-groovy">task shadedJar(type: ShadedJar) {
    jarFile = file("$buildDir/libs/shaded.jar")
    classpath = configurations.runtime
    mapping = ['org.apache': 'shaded.org.apache']
@@ -51,8 +54,7 @@ Misc OSS contribs (Gradle plugins, deck2pdf, jlangdetect, ...)'''
 
    @OutputFile
    File getJarFile() { ... }
-}</code></pre></div></div></section><section id="know-why-your-task-is-out-of-date"><h2>Know why your task is out-of-date</h2><div class="imageblock" style=""><img src="./images/task-out-of-date.png" alt="task out of date" width="1280" height="415" /></div></section><section id="incremental-task-inputs"><h2>Incremental task inputs</h2><div class="ulist"><ul><li><p>Know precisely <em>which</em> files have changed</p></li><li><p>Task action can perform the minimal amount of work</p></li></ul></div></section></section>
-<section id="incremental-task-inputs-2"><h2>Incremental task inputs</h2><div class="listingblock"><div class="content"><pre class="highlight"><code class="java language-java">@TaskAction
+}</code></pre></div></div></section><section id="know-why-your-task-is-out-of-date"><h2>Know why your task is out-of-date</h2><div class="imageblock" style=""><img src="./images/task-out-of-date.png" alt="task out of date" width="1280" height="415" /></div></section><section id="incremental-task-inputs"><h2>Incremental task inputs</h2><div class="ulist"><ul><li><p>Know precisely <em>which</em> files have changed</p></li><li><p>Task action can perform the minimal amount of work</p></li></ul></div></section><section id="incremental-task-inputs-2"><h2>Incremental task inputs</h2><div class="listingblock"><div class="content"><pre class="highlight"><code class="java language-java">@TaskAction
 public void execute(IncrementalTaskInputs inputs) {
    if (!inputs.isIncremental()) {
       // clean build, for example
@@ -68,8 +70,8 @@ public void execute(IncrementalTaskInputs inputs) {
          }
       });
    }
-}</code></pre></div></div></section>
-<section><section id="compile-avoidance"><h2>Compile avoidance</h2></section><section id="compile-classpath-leakage"><h2>Compile classpath leakage</h2></section><section id="a-typical-dependency-graph" data-state="show-dep-graph0"><h2>A typical dependency graph</h2><div id="cy0" class="drawing"></div>
+}</code></pre></div></div></section></section>
+<section><section id="compile-avoidance" data-background-color="#01303a"><h2>Compile avoidance</h2></section><section id="compile-classpath-leakage"><h2>Compile classpath leakage</h2></section><section id="a-typical-dependency-graph" data-state="show-dep-graph0"><h2>A typical dependency graph</h2><div id="cy0" class="drawing"></div>
 
 <script>
 addDependencyGraph(0, function() {});
@@ -201,7 +203,7 @@ addDependencyGraph(4, function(cy) {
    highlightNextEle(cy.$('#h'));
 });
 </script></section></section>
-<section><section id="classpath-snapshotting"><h2>Classpath snapshotting</h2><div class="ulist"><ul><li class="fragment"><p>Compute a hash of inputs</p></li><li class="fragment"><p>If hash hasn&#8217;t changed, task is up-to-date</p></li><li class="fragment"><p>Is a compile classpath equivalent to runtime classpath?</p></li></ul></div></section><section id="compile-classpath"><h2>Compile classpath</h2><div class="paragraph"><p>What does a <strong>compiler</strong> care about?</p></div>
+<section><section id="consumers-are-not-equal" data-background-color="#01303a"><h2>Consumers are not equal</h2></section><section id="classpath-snapshotting"><h2>Classpath snapshotting</h2><div class="ulist"><ul><li class="fragment"><p>Compute a hash of inputs</p></li><li class="fragment"><p>If hash hasn&#8217;t changed, task is up-to-date</p></li><li class="fragment"><p>Is a compile classpath equivalent to runtime classpath?</p></li></ul></div></section><section id="compile-classpath"><h2>Compile classpath</h2><div class="paragraph"><p>What does a <strong>compiler</strong> care about?</p></div>
 <div class="ulist"><ul><li class="fragment"><p>Input: jars, or class directories</p></li><li class="fragment"><p>Jar: class files</p></li><li class="fragment"><p>Class file: both API and implementation</p></li></ul></div></section><section id="compile-classpath-2"><h2>Compile classpath</h2><div class="paragraph"><p>What we provide to the compiler</p></div>
 <div class="listingblock"><div class="content"><pre class="highlight"><code>public class Foo {
     private int x = 123;
@@ -265,7 +267,8 @@ addDependencyGraph(5, function(cy) {
    highlightNextEle(cy.$('#h'), 0);
 });
 </script></section><section id="icing-on-the-cake"><h2>Icing on the cake</h2><div class="ulist"><ul><li><p>Upgrade a dependency from <code>1.0.1</code> to <code>1.0.2</code></p></li><li><p>If ABI hasn&#8217;t changed, Gradle will <em>not</em> recompile</p></li><li><p>Even if the name of the jar is different (<code>mydep-1.0.1.jar</code> vs <code>mydep-1.0.2.jar</code>)</p></li><li><p>Because only <em>contents</em> matter</p></li></ul></div></section></section>
-<section><section id="incremental-compilation"><h2>Incremental compilation</h2><div class="ulist"><ul><li><p>Given a set of source files</p></li><li><p>Only compile the files which have changed&#8230;&#8203;</p></li><li><p>and their dependencies</p></li><li><p>Language specific</p></li></ul></div></section><section id="gradle-has-support-for-incremental-compilation-of-java"><h2>Gradle has support for incremental compilation of Java</h2><div class="listingblock"><div class="content"><pre class="highlight"><code>compileJava {
+<section id="incremental-compilation" data-background-color="#01303a"><h2>Incremental compilation</h2></section>
+<section><section id="basics"><h2>Basics</h2><div class="ulist"><ul><li><p>Given a set of source files</p></li><li><p>Only compile the files which have changed&#8230;&#8203;</p></li><li><p>and their dependencies</p></li><li><p>Language specific</p></li></ul></div></section><section id="gradle-has-support-for-incremental-compilation-of-java"><h2>Gradle has support for incremental compilation of Java</h2><div class="listingblock"><div class="content"><pre class="highlight"><code>compileJava {
     //enable incremental compilation
     options.incremental = true
 }</code></pre></div></div>
@@ -309,13 +312,13 @@ dependencies {
 compileJava {
     options.annotationProcessorPath = configurations.apt
 }</code></pre></div></div></section>
-<section><section id="variant-aware-dependency-management"><h2>Variant aware dependency management</h2></section><section id="producer-vs-consumer"><h2>Producer vs consumer</h2><div class="ulist"><ul><li class="fragment"><p>A <code>consumer</code> <em>depends on</em> a <code>producer</code></p></li><li class="fragment"><p>There are multiple requirements</p><div class="ulist"><ul><li><p>What is required to compile against a <code>producer</code>?</p></li><li><p>What is required at <em>runtime</em> for a specific configuration?</p></li><li><p>What artifacts does the producer offer?</p></li><li><p>Is the <code>producer</code> a sub-project or an external component?</p></li></ul></div></li></ul></div></section><section id="what-do-you-need-to-compile-against-a-component"><h2>What do you need to compile against a component?</h2><div class="ulist"><ul><li><p>Class files</p></li><li><p>Can be found in different forms:</p><div class="ulist"><ul><li><p>class directories</p></li><li><p>jars</p></li><li><p>aars, &#8230;&#8203;</p></li></ul></div></li></ul></div>
+<section><section id="variant-aware-dependency-management" data-background-color="#01303a"><h2>Variant aware dependency management</h2></section><section id="producer-vs-consumer"><h2>Producer vs consumer</h2><div class="ulist"><ul><li class="fragment"><p>A <code>consumer</code> <em>depends on</em> a <code>producer</code></p></li><li class="fragment"><p>There are multiple requirements</p><div class="ulist"><ul><li><p>What is required to compile against a <code>producer</code>?</p></li><li><p>What is required at <em>runtime</em> for a specific configuration?</p></li><li><p>What artifacts does the producer offer?</p></li><li><p>Is the <code>producer</code> a sub-project or an external component?</p></li></ul></div></li></ul></div></section><section id="what-do-you-need-to-compile-against-a-component"><h2>What do you need to compile against a component?</h2><div class="ulist"><ul><li><p>Class files</p></li><li><p>Can be found in different forms:</p><div class="ulist"><ul><li><p>class directories</p></li><li><p>jars</p></li><li><p>aars, &#8230;&#8203;</p></li></ul></div></li></ul></div>
 <div class="paragraph"><p><strong>Question</strong>: do we need to build a jar of the producer if all we want is to compile against it?</p></div></section><section id="discriminate-thanks-to-em-usage-em"><h2>Discriminate thanks to <em>usage</em></h2><div class="quoteblock"><blockquote><div class="paragraph"><p>Give me something that I can use to compile</p></div></blockquote><div class="attribution">&#8212; Consumer</div></div></section><section id="discriminate-thanks-to-em-usage-em-2"><h2>Discriminate thanks to <em>usage</em></h2><div class="quoteblock"><blockquote><div class="paragraph"><p>Sure, here&#8217;s a jar</p></div></blockquote><div class="attribution">&#8212; Producer</div></div></section><section id="discriminate-thanks-to-em-usage-em-3"><h2>Discriminate thanks to <em>usage</em></h2><div class="paragraph"><p>But we can be finer:</p></div>
 <div class="quoteblock"><blockquote><div class="paragraph"><p>Sure, here&#8217;s a class directory</p></div></blockquote><div class="attribution">&#8212; Producer</div></div></section><section id="discriminate-thanks-to-em-usage-em-4"><h2>Discriminate thanks to <em>usage</em></h2><div class="paragraph"><p>Or smarter:</p></div>
 <div class="quoteblock"><blockquote><div class="paragraph"><p>mmm, all I have is an AAR, but don&#8217;t worry, I know how to transform it to something you can use for compile</p></div></blockquote><div class="attribution">&#8212; Producer</div></div></section><section id="the-java-library-plugin"><h2>The Java Library Plugin</h2><div class="ulist"><ul><li><p>will provide consumers with a <em>class directory</em> for compile</p></li><li><p>will provide consumers with a <em>jar</em> for runtime</p></li></ul></div>
 <div class="paragraph"><p>As a consequence:</p></div>
-<div class="ulist"><ul><li><p>only <code>classes</code> task will be triggerred when compiling</p></li><li><p><code>jar</code> (and therefore <code>processResources</code>) only triggerred when needed at runtime</p></li></ul></div></section><section id="conclusion"><h2>Conclusion</h2><div class="paragraph"><p>Use the Java Library Plugin!</p></div>
-<div id="chart"></div>
+<div class="ulist"><ul><li><p>only <code>classes</code> task will be triggerred when compiling</p></li><li><p><code>jar</code> (and therefore <code>processResources</code>) only triggerred when needed at runtime</p></li></ul></div></section></section>
+<section><section id="conclusion" data-background-color="#01303a"><h2>Conclusion</h2></section><section id="use-the-java-library-plugin"><h2>Use the Java Library Plugin!</h2><div id="chart"></div>
 <script>
 dependencyGraphs.push(function() {
    var chart = c3.generate({
@@ -343,7 +346,9 @@ dependencyGraphs.push(function() {
        }
    });
 });
-</script></section></section>
+</script>
+<div class="paragraph"><p>Slides: <a href="https://melix.github.io/gradle-summit-2017-max-incremental" class="bare">https://melix.github.io/gradle-summit-2017-max-incremental</a>
+Discuss: @CedricChampeau</p></div></section></section>
 <section id="thanks" data-background-image="./images/outro.jpeg" data-background-size="cover"></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.js"></script><script>// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
 Reveal.initialize({
   // Display controls in the bottom right corner
